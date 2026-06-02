@@ -186,6 +186,9 @@
   #map {
     flex: 1;
     position: relative;
+    min-height: 400px;
+    height: 100%;
+    width: 100%;
   }
 
   /* 지도 오버레이 패널 */
@@ -331,7 +334,7 @@
   </div>
 
   <!-- 지도 -->
-  <div style="position:relative; flex:1;">
+  <div style="position:relative; flex:1; height:100%; min-height:400px;">
     <div id="map"></div>
 
     <!-- 모드 토글 -->
@@ -360,7 +363,7 @@
 </div>
 
 <!-- 연도별 데이터 스크립트 (lazy load) -->
-<script src="data/stats.js"></script>
+<script src="stats.js"></script>
 <script>
 // ─── 전역 상태 ───────────────────────────────────
 let currentYear = 2022;
@@ -543,7 +546,7 @@ function loadYearLayer(yr) {
     return;
   }
   const script = document.createElement('script');
-  script.src = `data/flood_${yr}.js`;
+  script.src = `flood_${yr}.js`;
   script.onload = () => {
     loadedData[yr] = window[`FLOOD_${yr}`];
     drawYearLayer(yr);
@@ -622,7 +625,7 @@ function drawCumulLayer() {
   needed.forEach(yr => {
     if (loadedData[yr]) { loaded++; if (loaded === needed.length) renderCumul(); return; }
     const s = document.createElement('script');
-    s.src = `data/flood_${yr}.js`;
+    s.src = `flood_${yr}.js`;
     s.onload = () => { loadedData[yr] = window[`FLOOD_${yr}`]; loaded++; if (loaded === needed.length) renderCumul(); };
     document.head.appendChild(s);
   });
@@ -666,7 +669,7 @@ function showLoading(v) {
 }
 
 // ─── 초기 로드 ────────────────────────────────────
-loadYearLayer(currentYear);
+setTimeout(() => { map.invalidateSize(); loadYearLayer(currentYear); }, 300);
 
 </script>
 </body>
