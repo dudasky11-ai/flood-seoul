@@ -11,10 +11,10 @@
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Space+Mono:wght@400;700&display=swap');
 
   :root {
-    --bg: #0a0e17;
-    --panel: #111827;
-    --border: #1e293b;
-    --text: #e2e8f0;
+    --bg: #f0f4f8;
+    --panel: #ffffff;
+    --border: #cbd5e1;
+    --text: #1e293b;
     --muted: #64748b;
     --accent: #3b82f6;
     --danger: #ef4444;
@@ -38,8 +38,8 @@
   /* 헤더 */
   header {
     padding: 12px 24px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
+    background: #1e3a5f;
+    border-bottom: 2px solid #2563eb;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -50,13 +50,14 @@
     font-size: 15px;
     font-weight: 700;
     letter-spacing: -0.3px;
+    color: #f8fafc;
   }
   .header-title span {
     color: var(--accent);
   }
   .header-sub {
     font-size: 11px;
-    color: var(--muted);
+    color: #94a3b8;
     font-family: 'Space Mono', monospace;
   }
 
@@ -87,10 +88,27 @@
   .section-label {
     font-size: 10px;
     font-family: 'Space Mono', monospace;
-    color: var(--muted);
+    color: #2563eb;
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .chart-tab {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid #cbd5e1;
+    background: #f1f5f9;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chart-tab.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
   }
   .chart-canvas-wrap {
     height: 140px;
@@ -110,9 +128,9 @@
     margin-top: 8px;
   }
   .year-btn {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--muted);
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
     font-size: 11px;
     font-family: 'Space Mono', monospace;
     padding: 5px 2px;
@@ -121,10 +139,10 @@
     text-align: center;
     transition: all 0.15s;
   }
-  .year-btn:hover { border-color: var(--accent); color: var(--text); }
+  .year-btn:hover { border-color: #2563eb; color: #1e293b; background: #dbeafe; }
   .year-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: #2563eb;
+    border-color: #2563eb;
     color: #fff;
     font-weight: 700;
   }
@@ -186,9 +204,6 @@
   #map {
     flex: 1;
     position: relative;
-    min-height: 400px;
-    height: 100%;
-    width: 100%;
   }
 
   /* 지도 오버레이 패널 */
@@ -197,29 +212,30 @@
     top: 14px;
     right: 14px;
     z-index: 900;
-    background: rgba(17,24,39,0.92);
+    background: rgba(255,255,255,0.95);
     backdrop-filter: blur(8px);
-    border: 1px solid var(--border);
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
     padding: 14px 16px;
     min-width: 200px;
     pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
   .overlay-year {
     font-size: 28px;
     font-family: 'Space Mono', monospace;
     font-weight: 700;
-    color: var(--accent);
+    color: #2563eb;
     line-height: 1;
   }
   .overlay-stats {
     margin-top: 8px;
     font-size: 12px;
-    color: var(--muted);
+    color: #475569;
     line-height: 1.7;
   }
   .overlay-stats strong {
-    color: var(--text);
+    color: #1e293b;
     font-family: 'Space Mono', monospace;
   }
 
@@ -241,16 +257,16 @@
 
   /* 툴팁 */
   .leaflet-popup-content-wrapper {
-    background: var(--panel);
-    border: 1px solid var(--border);
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    color: var(--text);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    color: #1e293b;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   }
-  .leaflet-popup-tip { background: var(--panel); }
+  .leaflet-popup-tip { background: #ffffff; }
   .popup-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-  .popup-row { font-size: 11px; color: var(--muted); line-height: 1.8; }
-  .popup-row span { color: var(--text); font-family: 'Space Mono', monospace; }
+  .popup-row { font-size: 11px; color: #64748b; line-height: 1.8; }
+  .popup-row span { color: #1e293b; font-family: 'Space Mono', monospace; }
 
   /* 범례 */
   .legend {
@@ -258,13 +274,15 @@
     bottom: 28px;
     right: 14px;
     z-index: 900;
-    background: rgba(17,24,39,0.92);
-    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.95);
+    border: 1px solid #cbd5e1;
     border-radius: 6px;
     padding: 10px 12px;
     font-size: 11px;
+    color: #1e293b;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
-  .legend-title { color: var(--muted); margin-bottom: 6px; font-family: 'Space Mono', monospace; font-size: 10px; }
+  .legend-title { color: #64748b; margin-bottom: 6px; font-family: 'Space Mono', monospace; font-size: 10px; }
   .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
   .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
@@ -278,9 +296,9 @@
     gap: 6px;
   }
   .mode-btn {
-    background: rgba(17,24,39,0.92);
-    border: 1px solid var(--border);
-    color: var(--muted);
+    background: rgba(255,255,255,0.95);
+    border: 1px solid #cbd5e1;
+    color: #475569;
     font-size: 11px;
     font-family: 'Space Mono', monospace;
     padding: 6px 12px;
@@ -290,8 +308,8 @@
     transition: all 0.15s;
   }
   .mode-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: #2563eb;
+    border-color: #2563eb;
     color: #fff;
   }
 </style>
@@ -312,9 +330,16 @@
   <!-- 사이드바 -->
   <div class="sidebar">
 
-    <!-- 연도별 면적 차트 -->
+    <!-- 연도별 차트 -->
     <div class="chart-wrap">
-      <div class="section-label">연도별 침수 면적 추이 (ha)</div>
+      <div style="display:flex; gap:6px; margin-bottom:10px; align-items:center; justify-content:space-between;">
+        <span class="section-label" style="margin-bottom:0;">연도별 추이</span>
+        <div style="display:flex; gap:4px;">
+          <button class="chart-tab active" id="tabArea" onclick="switchChart('area')">침수면적</button>
+          <button class="chart-tab" id="tabDmg" onclick="switchChart('damage')">피해액</button>
+          <button class="chart-tab" id="tabLong" onclick="switchChart('long')">장기(85~)</button>
+        </div>
+      </div>
       <div class="chart-canvas-wrap">
         <canvas id="areaChart"></canvas>
       </div>
@@ -334,7 +359,7 @@
   </div>
 
   <!-- 지도 -->
-  <div style="position:relative; flex:1; height:100%; min-height:400px;">
+  <div style="position:relative; flex:1;">
     <div id="map"></div>
 
     <!-- 모드 토글 -->
@@ -378,7 +403,7 @@ const map = L.map('map', {
   zoomControl: true
 });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
   attribution: '© OpenStreetMap © CARTO',
   maxZoom: 18
 }).addTo(map);
@@ -426,11 +451,11 @@ const areaChart = new Chart(ctx, {
             return [`면적: ${stat.area_ha}ha`, `건수: ${stat.count.toLocaleString()}건`];
           }
         },
-        backgroundColor: '#111827',
-        borderColor: '#1e293b',
+        backgroundColor: '#ffffff',
+        borderColor: '#cbd5e1',
         borderWidth: 1,
-        titleColor: '#e2e8f0',
-        bodyColor: '#94a3b8',
+        titleColor: '#1e293b',
+        bodyColor: '#64748b',
       }
     },
     scales: {
@@ -440,11 +465,11 @@ const areaChart = new Chart(ctx, {
           font: { family: 'Space Mono', size: 9 },
           maxRotation: 45,
         },
-        grid: { color: 'rgba(30,41,59,0.5)' }
+        grid: { color: 'rgba(203,213,225,0.7)' }
       },
       y: {
         ticks: { color: '#64748b', font: { size: 9 } },
-        grid: { color: 'rgba(30,41,59,0.5)' }
+        grid: { color: 'rgba(203,213,225,0.7)' }
       }
     }
   }
@@ -668,8 +693,62 @@ function showLoading(v) {
   document.getElementById('mapLoading').style.display = v ? 'block' : 'none';
 }
 
+
+// ─── 차트 전환 ────────────────────────────────────────
+let currentChartMode = 'area';
+
+function switchChart(mode) {
+  currentChartMode = mode;
+  ['area','damage','long'].forEach(m => {
+    document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1))?.classList.toggle('active', m === mode);
+  });
+
+  const dmgData  = YEARLY_STATS.map(d => d.damage_mil || 0);
+  const longYears = DAMAGE_ALL.map(d => d.year);
+  const longDmg   = DAMAGE_ALL.map(d => d.damage_mil || 0);
+
+  if (mode === 'area') {
+    areaChart.data.labels = years;
+    areaChart.data.datasets[0].data = areaData;
+    areaChart.data.datasets[0].backgroundColor = barColors;
+    areaChart.options.plugins.tooltip.callbacks.label = (ctx) => {
+      const yr = years[ctx.dataIndex];
+      const stat = YEARLY_STATS.find(d => d.year === yr);
+      if (!stat || stat.area_ha === 0) return '침수 없음';
+      return [`면적: ${stat.area_ha}ha`, `건수: ${stat.count.toLocaleString()}건`];
+    };
+  } else if (mode === 'damage') {
+    areaChart.data.labels = years;
+    areaChart.data.datasets[0].data = dmgData;
+    areaChart.data.datasets[0].backgroundColor = dmgData.map(v =>
+      v > 30000 ? 'rgba(220,38,38,0.8)' :
+      v > 5000  ? 'rgba(217,119,6,0.75)' :
+      v > 0     ? 'rgba(37,99,235,0.65)' : 'rgba(203,213,225,0.3)'
+    );
+    areaChart.options.plugins.tooltip.callbacks.label = (ctx) => {
+      const yr = years[ctx.dataIndex];
+      const stat = YEARLY_STATS.find(d => d.year === yr);
+      if (!stat || !stat.damage_mil) return '피해 없음';
+      return `피해액: ${stat.damage_mil.toLocaleString()}백만원`;
+    };
+  } else {
+    areaChart.data.labels = longYears;
+    areaChart.data.datasets[0].data = longDmg;
+    areaChart.data.datasets[0].backgroundColor = longDmg.map(v =>
+      v > 30000 ? 'rgba(220,38,38,0.8)' :
+      v > 5000  ? 'rgba(217,119,6,0.75)' :
+      v > 0     ? 'rgba(37,99,235,0.65)' : 'rgba(203,213,225,0.3)'
+    );
+    areaChart.options.plugins.tooltip.callbacks.label = (ctx) => {
+      const v = longDmg[ctx.dataIndex];
+      return v > 0 ? `피해액: ${v.toLocaleString()}백만원` : '피해 없음';
+    };
+  }
+  areaChart.update();
+}
+
 // ─── 초기 로드 ────────────────────────────────────
-setTimeout(() => { map.invalidateSize(); loadYearLayer(currentYear); }, 300);
+setTimeout(() => { map.invalidateSize(); loadYearLayer(currentYear); }, 200);
 
 </script>
 </body>
