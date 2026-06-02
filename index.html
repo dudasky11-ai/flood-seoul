@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서울 침수 기록 — 기후위기 시각화</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0e17;
+    --panel: #111827;
+    --border: #1e293b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #3b82f6;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --safe: #10b981;
+    --year-active: #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 헤더 */
+  header {
+    padding: 12px 24px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    z-index: 1000;
+  }
+  .header-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header-title span {
+    color: var(--accent);
+  }
+  .header-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* 메인 레이아웃 */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* 왼쪽 사이드바 */
+  .sidebar {
+    width: 340px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* 차트 영역 */
+  .chart-wrap {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .section-label {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .chart-canvas-wrap {
+    height: 140px;
+    position: relative;
+  }
+
+  /* 연도 선택 */
+  .year-selector {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .year-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .year-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    padding: 5px 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .year-btn:hover { border-color: var(--accent); color: var(--text); }
+  .year-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 700;
+  }
+  .year-btn.zero { opacity: 0.35; cursor: default; }
+  .year-btn.zero:hover { border-color: var(--border); color: var(--muted); }
+
+  /* 구별 순위 */
+  .gu-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+  }
+  .gu-list::-webkit-scrollbar { width: 4px; }
+  .gu-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .gu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .gu-item:hover { background: rgba(59,130,246,0.07); border-radius: 6px; padding-left: 4px; }
+  .gu-rank {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    width: 18px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .gu-name {
+    font-size: 13px;
+    font-weight: 500;
+    flex: 1;
+  }
+  .gu-repeat {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .repeat-high { background: rgba(239,68,68,0.15); color: #f87171; }
+  .repeat-mid  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .repeat-low  { background: rgba(100,116,139,0.15); color: #94a3b8; }
+  .gu-area {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    width: 60px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* 지도 */
+  #map {
+    flex: 1;
+    position: relative;
+  }
+
+  /* 지도 오버레이 패널 */
+  .map-overlay {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 900;
+    background: rgba(17,24,39,0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    min-width: 200px;
+    pointer-events: none;
+  }
+  .overlay-year {
+    font-size: 28px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .overlay-stats {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .overlay-stats strong {
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .map-loading {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    background: rgba(17,24,39,0.9);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    display: none;
+  }
+
+  /* 툴팁 */
+  .leaflet-popup-content-wrapper {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .leaflet-popup-tip { background: var(--panel); }
+  .popup-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .popup-row { font-size: 11px; color: var(--muted); line-height: 1.8; }
+  .popup-row span { color: var(--text); font-family: 'Space Mono', monospace; }
+
+  /* 범례 */
+  .legend {
+    position: absolute;
+    bottom: 28px;
+    right: 14px;
+    z-index: 900;
+    background: rgba(17,24,39,0.92);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  .legend-title { color: var(--muted); margin-bottom: 6px; font-family: 'Space Mono', monospace; font-size: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .legend-color { width: 12px; height: 12px; border-radius: 2px; }
+
+  /* 누적 모드 토글 */
+  .mode-toggle {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 900;
+    display: flex;
+    gap: 6px;
+  }
+  .mode-btn {
+    background: rgba(17,24,39,0.92);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.15s;
+  }
+  .mode-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-title">서울시 침수 기록 <span>2010–2024</span></div>
+    <div class="header-sub">기후위기와 도시침수 · 서울열린데이터광장 침수흔적도</div>
+  </div>
+  <div style="font-size:11px; color:var(--muted); font-family:'Space Mono',monospace; text-align:right;">
+    2015·2021·2023<br>침수없음
+  </div>
+</header>
+
+<div class="main">
+  <!-- 사이드바 -->
+  <div class="sidebar">
+
+    <!-- 연도별 면적 차트 -->
+    <div class="chart-wrap">
+      <div class="section-label">연도별 침수 면적 추이 (ha)</div>
+      <div class="chart-canvas-wrap">
+        <canvas id="areaChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 연도 선택 -->
+    <div class="year-selector">
+      <div class="section-label">연도 선택 → 지도 표시</div>
+      <div class="year-grid" id="yearGrid"></div>
+    </div>
+
+    <!-- 구별 반복 침수 순위 -->
+    <div class="gu-list" id="guList">
+      <div class="section-label" style="margin-bottom:8px;">구별 반복 침수 횟수 순위</div>
+    </div>
+
+  </div>
+
+  <!-- 지도 -->
+  <div style="position:relative; flex:1;">
+    <div id="map"></div>
+
+    <!-- 모드 토글 -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btnYear" onclick="setMode('year')">연도별 보기</button>
+      <button class="mode-btn" id="btnCumul" onclick="setMode('cumul')">누적 반복 보기</button>
+    </div>
+
+    <!-- 오버레이 -->
+    <div class="map-overlay" id="mapOverlay">
+      <div class="overlay-year" id="overlayYear">전체</div>
+      <div class="overlay-stats" id="overlayStats"></div>
+    </div>
+
+    <!-- 로딩 -->
+    <div class="map-loading" id="mapLoading">데이터 불러오는 중...</div>
+
+    <!-- 범례 -->
+    <div class="legend" id="mapLegend">
+      <div class="legend-title">침수 강도</div>
+      <div class="legend-item"><div class="legend-color" style="background:#ef4444;opacity:0.8;"></div> 고강도</div>
+      <div class="legend-item"><div class="legend-color" style="background:#f59e0b;opacity:0.8;"></div> 중강도</div>
+      <div class="legend-item"><div class="legend-color" style="background:#3b82f6;opacity:0.6;"></div> 저강도</div>
+    </div>
+  </div>
+</div>
+
+<!-- 연도별 데이터 스크립트 (lazy load) -->
+<script src="data/stats.js"></script>
+<script>
+// ─── 전역 상태 ───────────────────────────────────
+let currentYear = 2022;
+let currentMode = 'year'; // 'year' | 'cumul'
+let floodLayer = null;
+let loadedData = {};
+
+// ─── 지도 초기화 ─────────────────────────────────
+const map = L.map('map', {
+  center: [37.545, 127.0],
+  zoom: 11,
+  zoomControl: true
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap © CARTO',
+  maxZoom: 18
+}).addTo(map);
+
+// ─── 차트 ─────────────────────────────────────────
+const years     = YEARLY_STATS.map(d => d.year);
+const areaData  = YEARLY_STATS.map(d => d.area_ha);
+const countData = YEARLY_STATS.map(d => d.count);
+
+const barColors = areaData.map(v =>
+  v > 500 ? 'rgba(239,68,68,0.85)' :
+  v > 50  ? 'rgba(245,158,11,0.75)' :
+  v > 0   ? 'rgba(59,130,246,0.65)' :
+            'rgba(100,116,139,0.2)'
+);
+
+const ctx = document.getElementById('areaChart').getContext('2d');
+const areaChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: years,
+    datasets: [{
+      data: areaData,
+      backgroundColor: barColors,
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    onClick: (e, els) => {
+      if (els.length > 0) {
+        const yr = years[els[0].index];
+        if (yr !== 2015 && yr !== 2021 && yr !== 2023) selectYear(yr);
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const yr = years[ctx.dataIndex];
+            const stat = YEARLY_STATS.find(d => d.year === yr);
+            if (!stat || stat.area_ha === 0) return '침수 없음';
+            return [`면적: ${stat.area_ha}ha`, `건수: ${stat.count.toLocaleString()}건`];
+          }
+        },
+        backgroundColor: '#111827',
+        borderColor: '#1e293b',
+        borderWidth: 1,
+        titleColor: '#e2e8f0',
+        bodyColor: '#94a3b8',
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#64748b',
+          font: { family: 'Space Mono', size: 9 },
+          maxRotation: 45,
+        },
+        grid: { color: 'rgba(30,41,59,0.5)' }
+      },
+      y: {
+        ticks: { color: '#64748b', font: { size: 9 } },
+        grid: { color: 'rgba(30,41,59,0.5)' }
+      }
+    }
+  }
+});
+
+// ─── 연도 버튼 생성 ───────────────────────────────
+const allYears = [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const dataYears = new Set([2010,2011,2012,2013,2014,2016,2017,2018,2019,2020,2022,2024]);
+
+const grid = document.getElementById('yearGrid');
+allYears.forEach(yr => {
+  const btn = document.createElement('button');
+  btn.className = 'year-btn' + (dataYears.has(yr) ? '' : ' zero') + (yr === currentYear ? ' active' : '');
+  btn.textContent = String(yr).slice(2);
+  btn.id = `ybtn_${yr}`;
+  if (dataYears.has(yr)) btn.onclick = () => selectYear(yr);
+  grid.appendChild(btn);
+});
+
+// ─── 구별 목록 생성 ───────────────────────────────
+function buildGuList(filterYear = null) {
+  const container = document.getElementById('guList');
+  // 기존 항목 삭제 (라벨 제외)
+  const label = container.querySelector('.section-label');
+  container.innerHTML = '';
+  container.appendChild(label);
+
+  let entries = Object.entries(GU_SUMMARY);
+
+  if (filterYear) {
+    // 해당 연도에 침수된 구만 + 그 해 면적 순
+    entries = entries
+      .filter(([,d]) => d.years[filterYear])
+      .sort((a, b) => (b[1].years[filterYear] || 0) - (a[1].years[filterYear] || 0));
+    label.textContent = `${filterYear}년 침수 피해 구 순위 (면적)`;
+  } else {
+    // 누적 반복 횟수 순
+    entries = entries.sort((a, b) => b[1].repeat_count - a[1].repeat_count);
+    label.textContent = '구별 반복 침수 횟수 순위';
+  }
+
+  entries.forEach(([gu, data], i) => {
+    const item = document.createElement('div');
+    item.className = 'gu-item';
+
+    const repeatClass = data.repeat_count >= 8 ? 'repeat-high' :
+                        data.repeat_count >= 5 ? 'repeat-mid' : 'repeat-low';
+
+    const areaVal = filterYear
+      ? (data.years[filterYear] / 10000).toFixed(1) + 'ha'
+      : (data.total_area / 10000).toFixed(0) + 'ha';
+
+    item.innerHTML = `
+      <span class="gu-rank">${i+1}</span>
+      <span class="gu-name">${gu}</span>
+      <span class="gu-repeat ${repeatClass}">${data.repeat_count}회</span>
+      <span class="gu-area">${areaVal}</span>
+    `;
+    container.appendChild(item);
+  });
+}
+
+buildGuList();
+
+// ─── 연도 선택 ────────────────────────────────────
+function selectYear(yr) {
+  // 버튼 상태
+  document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`ybtn_${yr}`)?.classList.add('active');
+
+  currentYear = yr;
+  currentMode = 'year';
+  document.getElementById('btnYear').classList.add('active');
+  document.getElementById('btnCumul').classList.remove('active');
+
+  buildGuList(yr);
+  loadYearLayer(yr);
+}
+
+// ─── 모드 전환 ────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btnYear').classList.toggle('active', mode === 'year');
+  document.getElementById('btnCumul').classList.toggle('active', mode === 'cumul');
+
+  if (mode === 'year') {
+    selectYear(currentYear);
+  } else {
+    buildGuList(null);
+    drawCumulLayer();
+  }
+}
+
+// ─── 연도별 레이어 로드 (lazy) ────────────────────
+function loadYearLayer(yr) {
+  showLoading(true);
+  if (loadedData[yr]) {
+    drawYearLayer(yr);
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = `data/flood_${yr}.js`;
+  script.onload = () => {
+    loadedData[yr] = window[`FLOOD_${yr}`];
+    drawYearLayer(yr);
+  };
+  script.onerror = () => { showLoading(false); };
+  document.head.appendChild(script);
+}
+
+function drawYearLayer(yr) {
+  if (floodLayer) map.removeLayer(floodLayer);
+
+  const geojson = loadedData[yr];
+  if (!geojson) { showLoading(false); return; }
+
+  // 면적 기준 색상 분류
+  function getColor(area) {
+    if (!area) return '#3b82f6';
+    if (area > 5000) return '#ef4444';
+    if (area > 500)  return '#f59e0b';
+    return '#3b82f6';
+  }
+
+  floodLayer = L.geoJSON(geojson, {
+    style: f => ({
+      fillColor: getColor(f.properties?.F_AREA),
+      fillOpacity: 0.55,
+      color: getColor(f.properties?.F_AREA),
+      weight: 0.5,
+      opacity: 0.8
+    }),
+    onEachFeature: (f, layer) => {
+      const p = f.properties || {};
+      const area = p.F_AREA ? `${p.F_AREA.toLocaleString()}㎡` : '-';
+      const cause = p.F_RSN_DTL || '-';
+      const zone  = p.F_ZONE_NM || p.GU_NAM || '-';
+      layer.bindPopup(`
+        <div class="popup-title">${zone}</div>
+        <div class="popup-row">침수 원인: <span>${cause}</span></div>
+        <div class="popup-row">침수 면적: <span>${area}</span></div>
+        <div class="popup-row">기록 연도: <span>${yr}년</span></div>
+      `);
+    }
+  }).addTo(map);
+
+  // 오버레이 업데이트
+  const stat = YEARLY_STATS.find(d => d.year === yr);
+  document.getElementById('overlayYear').textContent = `${yr}년`;
+  document.getElementById('overlayStats').innerHTML = stat ? `
+    침수 건수: <strong>${stat.count.toLocaleString()}건</strong><br>
+    침수 면적: <strong>${stat.area_ha}ha</strong>
+  ` : '';
+
+  showLoading(false);
+
+  // 차트 바 강조
+  areaChart.data.datasets[0].backgroundColor = areaData.map((v, i) =>
+    years[i] === yr ? 'rgba(255,255,255,0.9)' :
+    v > 500 ? 'rgba(239,68,68,0.85)' :
+    v > 50  ? 'rgba(245,158,11,0.75)' :
+    v > 0   ? 'rgba(59,130,246,0.65)' :
+              'rgba(100,116,139,0.2)'
+  );
+  areaChart.update();
+}
+
+// ─── 누적 레이어 ──────────────────────────────────
+function drawCumulLayer() {
+  if (floodLayer) map.removeLayer(floodLayer);
+  document.getElementById('overlayYear').textContent = '누적';
+  document.getElementById('overlayStats').innerHTML =
+    '2010–2024<br>반복 침수 지역<br><strong>색이 진할수록 위험</strong>';
+
+  // 필요한 연도 모두 로드 후 그리기
+  const needed = [2010, 2011, 2022];
+  let loaded = 0;
+  needed.forEach(yr => {
+    if (loadedData[yr]) { loaded++; if (loaded === needed.length) renderCumul(); return; }
+    const s = document.createElement('script');
+    s.src = `data/flood_${yr}.js`;
+    s.onload = () => { loadedData[yr] = window[`FLOOD_${yr}`]; loaded++; if (loaded === needed.length) renderCumul(); };
+    document.head.appendChild(s);
+  });
+
+  function renderCumul() {
+    const combined = [];
+    const yearColors = {
+      2010: '#3b82f6', 2011: '#8b5cf6', 2022: '#ef4444'
+    };
+    needed.forEach(yr => {
+      if (!loadedData[yr]) return;
+      loadedData[yr].features.forEach(f => {
+        combined.push({ ...f, properties: { ...f.properties, yr } });
+      });
+    });
+
+    floodLayer = L.geoJSON({ type: 'FeatureCollection', features: combined }, {
+      style: f => {
+        const yr = f.properties?.yr;
+        const color = yearColors[yr] || '#64748b';
+        return { fillColor: color, fillOpacity: 0.4, color, weight: 0.3, opacity: 0.6 };
+      },
+      onEachFeature: (f, layer) => {
+        const p = f.properties || {};
+        const gu = p.GU_NAM || '-';
+        layer.bindPopup(`
+          <div class="popup-title">${gu}</div>
+          <div class="popup-row">기록 연도: <span>${p.yr}년</span></div>
+          <div class="popup-row">침수 원인: <span>${p.F_RSN_DTL || '-'}</span></div>
+        `);
+      }
+    }).addTo(map);
+    showLoading(false);
+  }
+  showLoading(true);
+}
+
+// ─── 유틸 ─────────────────────────────────────────
+function showLoading(v) {
+  document.getElementById('mapLoading').style.display = v ? 'block' : 'none';
+}
+
+// ─── 초기 로드 ────────────────────────────────────
+loadYearLayer(currentYear);
+
+</script>
+</body>
+</html>
